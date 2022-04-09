@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>德德后台管理系统</title>
+  <link rel="stylesheet" href="/assets/layui/css/layui.css">
+</head>
+
+<body>
+  <div class="layui-layout layui-layout-admin">
+    <!-- 引入头部 -->
+    {{include "./common/header.html"}}
+
+    <!-- 引入侧边 -->
+    {{include "./common/side.html"}}
+
+    <div class="layui-body">
+      <!-- 内容主体区域 -->
+      <div style="padding: 15px;">
+        <table class="layui-table" id="cate" lay-filter="cate">
+          <a class="layui-btn layui-btn-xs" lay-event="" id="add">添加</a>
+        </table>
+      </div>
+    </div>
+
+    <div class="layui-footer">
+      <!-- 底部固定区域 -->
+      底部固定区域
+    </div>
+  </div>
+  <script src="/assets/layui/layui.js"></script>
+  <script>
+    layui.use(['table', 'layer'], function () {
+      var table = layui.table;
+      var layer = layui.layer;
+      var $ = layui.jquery;
+      table.render({
+        elem: '#cate',
+        // 渲染数据接口
+        url: '/cateData',
+        toolbar: '#cateTool',
+        cols: [[
+          { field: 'cate_id', width: 350, title: 'ID', sort: true },
+          { field: 'cate_name', width: 350, edit: 'text', title: '分类名称' },
+          { field: 'orderBy', width: 350, edit: 'text', title: '排序', sort: true },
+          {
+            fixed: "right", width: 350, title: '操作', templet: (obj) => {
+              return `
+          <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+          <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+          `
+            }
+          }
+        ]]
+      });
+
+      //监听单元格编辑
+      table.on('edit(cate)', async function (obj) {
+        const { data } = obj;
+        console.log(data);
+        // 发送请求，传递数据，并且成功接受返回的参数
+        const { code, message } = await $.post('/UpdData', data)
+        if (code === '0') {
+          layer.msg(message)
+          table.reload("cate")
+        }
+      });
+
+      //监听行工具事件
+      table.on('tool(cate)', function (obj) {
+        var data = obj.data;
+        if (obj.event == 'del') {
+          layer.confirm('真的删除行么', async function () {
+            let { code, message } = await $.post('/Deldata', data)
+            if (code === "0") {
+              layer.msg(message)
+              table.reload("cate") //重载表格数据
+              // location.reload()
+            }
+          });
+        }
+      })
+
+      // 添加单条数据
+      // $("#add").click(function () {
+      //   layer.prompt({ title: '请输入分类名称', formType: 0 }, function (cate_name, index) {
+      //     layer.close(index);
+      //     layer.prompt({ title: '请输入分类排序', formType: 0 }, async function (orderBy, index) {
+      //       layer.close(index);
+      //       let data = {cate_name, orderBy: orderBy}
+      //       let {code,message} = await $.post("/addcategory", data)
+      //       if(code === "0"){
+      //         layer.msg('添加成功')
+      //       }
+      //     });
+      //   });
+      // })
+
+      $('#add').click(function () {
+        layer.prompt({
+          formType: 2,
+          placeholder: '输入注销原因',
+          title: '请输入值',
+          // placeholder:'请输入分类名称',
+          area: ['500px', '25px'] //自定义文本域宽高
+        }, async function (value, index, elem) {
+          var data2 = $('#zxr').val()
+          let data = { cate_name: value, orderBy: data2 }
+          if (data2 === "") {
+            layer.tips("请填写序号", $('#zxr'));
+            return;
+          }
+          layer.close(index);
+          let { code, message } = await $.post("/addcategory", data)
+          if (code === "0") {
+            layer.msg('添加成功')
+            table.reload("cate")
+          }
+        });
+        $(".layui-layer-content").append("<br/><input type=\"text\" id= \"zxr\" class=\"layui-input\" placeholder=\"输入序号\"/>")
+      })
+
+
+    });
+  </script>
+</body>
+
+</html>
