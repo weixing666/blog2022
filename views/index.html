@@ -29,29 +29,44 @@
   <script src="/assets/layui/layui.js"></script>
   <script>
     //JS 
-    layui.use(['element', 'layer', 'util'], function () {
+    layui.use(['element', 'layer', 'util'], async function () {
       var element = layui.element
         , layer = layui.layer
         , util = layui.util
         , $ = layui.$;
+        // 1、请求系统设置的数据接口（注意是所有的，后面需要帅选）
+        let logoText = ''
+        result = await $.get("/systemData")
+        result.find(item=>{
+            if(item.name === "logoText"){
+             logoText = item.val
+              return true
+            }
+        })
+        $("#logoText").text(logoText)
+        // 储存到localStorage中，供其他页面使用
+        localStorage.setItem("logoText", logoText)
 
-      //头部事件
-      util.event('lay-header-event', {
-        //左侧菜单事件
-        menuLeft: function (othis) {
-          layer.msg('展开左侧菜单的操作111', { icon: 0 });
-        }
-        , menuRight: function () {
-          layer.open({
-            type: 1
-            , content: '<div style="padding: 15px;">处理右侧面板的操作234</div>'
-            , area: ['260px', '100%']
-            , offset: 'rt' //右上角
-            , anim: 5
-            , shadeClose: true
-          });
-        }
-      });
+
+      $('#edit').click(function () {
+        layer.prompt({
+          formType: 2,
+          title: '编辑昵称',
+          value: logoText,
+          area: ['500px', '25px'] //自定义文本域宽高
+        }, async function (value, index, elem) {
+          let data = {logoText:value}
+          layer.close(index);
+          let { code, message } = await $.post("/editsettings", data)
+          if (code === "0") {
+            layer.msg('编辑成功')
+            location.reload()
+          }
+        });
+        // $(".layui-layer-content").append("<br/><input type=\"text\" id= \"zxr\" class=\"layui-input\" />")
+      })
+
+
 
     });
   </script>

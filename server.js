@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const dotenv = require('dotenv').config({ path: '.env' })
 const artTemplate = require('art-template');
 const express_template = require('express-art-template');
 
@@ -7,11 +8,8 @@ const express_template = require('express-art-template');
 const router = require("./router/router")
 
 const app = express()
-
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-const dotenv = require('dotenv').config({ path: '.env' })
-
 
 //配置模板的路径
 app.set('views', __dirname + '/views/');
@@ -19,6 +17,21 @@ app.set('views', __dirname + '/views/');
 app.engine('html', express_template);
 //设置视图引擎为上面的html
 app.set('view engine', 'html');
+
+const session = require('express-session');
+// 初始化session相关配置s
+app.use(
+    session({
+        name: 'sesskey',        // session会话名称存储在cookie中的键名
+        secret: "dad&af5%$",      //用户session会话加密
+        cookie: {              //设置session在cookie中的其他选项配置
+            path: "/",
+            httpOnly: true,
+            maxAge: 60000 * 24,   // 有效期，有效期内访问重置，否则失效
+        }
+    })
+)
+
 
 // 托管静态资源
 app.use("/assets", express.static(path.join(__dirname, "assets")))

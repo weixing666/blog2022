@@ -11,9 +11,9 @@
 <body>
     <div class="login">
         <h1>小猪博客管理系统</h1>
-        <form method="post">
-            <input type="text" name="username" placeholder="Username" />
-            <input type="password" name="password" placeholder="Password"  />
+        <form method="post" action="/userpass">
+            <input type="text" name="username" id="username" placeholder="Username" />
+            <input type="password" name="password" id="password" placeholder="Password"  />
             <button type="submit" id="loginBtn" class="btn btn-primary btn-block btn-large">Login In</button>
         </form>
     </div>
@@ -21,9 +21,20 @@
 <script src="/assets/js/jquery.min.js"></script>
 <script src="/assets/layui/layui.js"></script>
 <script>
-    $("#loginBtn").on('click',()=>{
-        layer.msg('login')
-        return false;
+    $("#loginBtn").on('click',async ()=>{
+        // 1、前端验证数据是否符合格式
+        let nameReg = /^(\d{3})\d{4}(\d{4})$/
+        let passReg = /^(\d{3})\d{4}(\d{4})$/
+        let user = $("#username").value
+        let pass = $("#password").value
+
+        if(nameReg.test(user) && passReg.test(pass)){
+
+        }
+
+        
+        // layer.msg('login')
+        // return false;
     })
 </script>
 </html>
