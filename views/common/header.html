@@ -6,30 +6,23 @@
         <li class="layui-nav-item layui-show-xs-inline-block layui-hide-sm" lay-header-event="menuLeft">
             <i class="layui-icon layui-icon-spread-left"></i>
         </li>
-
-        <li class="layui-nav-item layui-hide-xs"><a href="">nav 1</a></li>
-        <li class="layui-nav-item layui-hide-xs"><a href="">nav 2</a></li>
-        <li class="layui-nav-item layui-hide-xs"><a href="">nav 3</a></li>
-        <li class="layui-nav-item">
-            <a href="javascript:;">nav groups</a>
-            <dl class="layui-nav-child">
-                <dd><a href="">menu 11</a></dd>
-                <dd><a href="">menu 22</a></dd>
-                <dd><a href="">menu 33</a></dd>
-            </dl>
-        </li>
     </ul>
     <ul class="layui-nav layui-layout-right">
         <li class="layui-nav-item layui-hide layui-show-md-inline-block">
             <a href="javascript:;">
                 <img src="https://img2.baidu.com/it/u=1012304310,3936720750&fm=26&fmt=auto&gp=0.jpg"
-                    class="layui-nav-img">
-                xiaoluo
+                    class="layui-nav-img" id="demo1">
+                <span id="username">xiaoluo</span>
             </a>
             <dl class="layui-nav-child">
-                <dd><a href="">个人信息</a></dd>
+                <dd><a href="#" id="personal">个人信息</a></dd>
                 <dd><a href="">修改密码</a></dd>
-                <dd><a href="/logoff" id="logon">退出</a></dd>
+                <!-- <dd>
+                    <button type="button" class="layui-btn" id="test2">
+                        <i class="layui-icon">&#xe67c;</i>修改头像
+                    </button>
+                </dd> -->
+                <dd><a href="#" id="logon">退出</a></dd>
             </dl>
         </li>
         <li class="layui-nav-item" lay-header-event="menuRight" lay-unselect>
@@ -40,7 +33,46 @@
     </ul>
 </div>
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"></script>
+<script src="/assets/layui/layui.js"></script>
 <script>
-      let logoText = localStorage.getItem('logoText')
-        $("#logoText").text(logoText)
+    let logoText = localStorage.getItem('logoText')
+    $("#logoText").text(logoText)
+    // // 头像预览
+    // layui.use('upload', function () {
+    //     var upload = layui.upload;
+    //     //执行实例
+    //     var uploadInst = upload.render({
+    //         elem: '#test1' //绑定元素
+    //         , url: '/upload' //上传接口
+    //         , before: function (obj) {
+    //             //预读本地文件示例，不支持ie8
+    //             obj.preview(function (index, file, result) {
+    //                 $('#demo1').attr('src', result);
+    //             });
+    //         }
+    //         , done: function (res) {
+    //             //上传完毕回调
+    //         }
+    //         , error: function () {
+    //             //请求异常回调
+    //         }
+    //     });
+    // });
+    // 点击退出登陆
+    $('#logon').on("click", async () => {
+        let { code } = await $.get("/logoff")
+        if (code === 0) {
+            location.href = "/login"
+        } else {
+            alert('退出失败')
+        }
+    })
+
+
+    let { username, intro, avatar } = JSON.parse(Cookies.get("userInfo"))
+    console.log(username);
+    // 获取cookie设置到headwr页面中,显示用户信息
+    $('#username').text(username)
+
 </script>

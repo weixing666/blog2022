@@ -3,23 +3,21 @@ const path = require("path");
 const dotenv = require('dotenv').config({ path: '.env' })
 const artTemplate = require('art-template');
 const express_template = require('express-art-template');
+const multer = require('multer')
+const checkSessAuth = require("./middleware/checkSessAuth")
 
-// 导入模块
-const router = require("./router/router")
+// 设置上传的目录
+const upload = multer({
+    dest: 'uploads/'
+})
 
 const app = express()
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-
-//配置模板的路径
-app.set('views', __dirname + '/views/');
-//设置express_template模板后缀为.html的文件(不设这句话，模板文件的后缀默认是.art)
-app.engine('html', express_template);
-//设置视图引擎为上面的html
-app.set('view engine', 'html');
-
 const session = require('express-session');
-// 初始化session相关配置s
+
+// 托管静态资源
+app.use("/assets", express.static(path.join(__dirname, "assets")))
+
+// 初始化session相关配置
 app.use(
     session({
         name: 'sesskey',        // session会话名称存储在cookie中的键名
@@ -32,9 +30,22 @@ app.use(
     })
 )
 
+// 放行路由
+app.use(checkSessAuth)
 
-// 托管静态资源
-app.use("/assets", express.static(path.join(__dirname, "assets")))
+// 导入模块
+const router = require("./router/router");
+const { log } = require("console");
+
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
+//配置模板的路径
+app.set('views', __dirname + '/views/');
+//设置express_template模板后缀为.html的文件(不设这句话，模板文件的后缀默认是.art)
+app.engine('html', express_template);
+//设置视图引擎为上面的html
+app.set('view engine', 'html');
 
 app.use(router)
 

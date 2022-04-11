@@ -29,13 +29,18 @@ router.post("/addcategory", CateController.addcategory)
 
 // 文章列表
 router.get("/articlelist", Articleontroller.catelist)
+// 文章表渲染数据
+router.get("/artiData", Articleontroller.artiData)
+//文章列表编辑数据
+router.post("/artiUpdData", Articleontroller.artiUpdData)
+//文章列表删除数据
+router.post("/artiDel", Articleontroller.artiDel)
 
 // 登陆验证
 router.get("/login", loginController.login)
 router.post("/userpass", loginController.userpass)
-// router.post("/logoff", loginController.logoff)
-
-
+router.get("/logoff", loginController.logoff)
+router.post("/UpduserInfo", loginController.UpduserInfo)
 
 
 module.exports = router
