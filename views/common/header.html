@@ -10,13 +10,12 @@
     <ul class="layui-nav layui-layout-right">
         <li class="layui-nav-item layui-hide layui-show-md-inline-block">
             <a href="javascript:;">
-                <img src="https://img2.baidu.com/it/u=1012304310,3936720750&fm=26&fmt=auto&gp=0.jpg"
-                    class="layui-nav-img" id="demo1">
-                <span id="username">xiaoluo</span>
+                <img id="avatar" src="" class="layui-nav-img">
+                <span id="username">请登录</span>
             </a>
             <dl class="layui-nav-child">
                 <dd><a href="#" id="personal">个人信息</a></dd>
-                <dd><a href="">修改密码</a></dd>
+                <dd><a href="#" id="chanPassword">修改密码</a></dd>
                 <!-- <dd>
                     <button type="button" class="layui-btn" id="test2">
                         <i class="layui-icon">&#xe67c;</i>修改头像
@@ -36,43 +35,263 @@
 <script src="https://cdn.bootcdn.net/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"></script>
 <script src="/assets/layui/layui.js"></script>
 <script>
-    let logoText = localStorage.getItem('logoText')
-    $("#logoText").text(logoText)
-    // // 头像预览
-    // layui.use('upload', function () {
-    //     var upload = layui.upload;
-    //     //执行实例
-    //     var uploadInst = upload.render({
-    //         elem: '#test1' //绑定元素
-    //         , url: '/upload' //上传接口
-    //         , before: function (obj) {
-    //             //预读本地文件示例，不支持ie8
-    //             obj.preview(function (index, file, result) {
-    //                 $('#demo1').attr('src', result);
-    //             });
-    //         }
-    //         , done: function (res) {
-    //             //上传完毕回调
-    //         }
-    //         , error: function () {
-    //             //请求异常回调
-    //         }
-    //     });
-    // });
-    // 点击退出登陆
-    $('#logon').on("click", async () => {
-        let { code } = await $.get("/logoff")
-        if (code === 0) {
-            location.href = "/login"
-        } else {
-            alert('退出失败')
+    layui.use(['element', 'layer', 'util', 'upload', 'form', 'layedit', 'laydate'], async function () {
+        var element = layui.element
+        var form = layui.form
+        layer = layui.layer
+        upload = layui.upload
+        util = layui.util
+        layedit = layui.layedit
+        laydate = layui.laydate
+        $ = layui.$;
+
+        // 设置博客昵称
+        let logoText = localStorage.getItem('logoText')
+        $("#logoText").text(logoText)
+
+        // 点击退出登陆
+        $('#logon').on("click", async () => {
+            let { code } = await $.get("/logoff")
+            if (code === 0) {
+                location.href = "/login"
+            } else {
+                alert('退出失败')
+            }
+        })
+
+        // 获取cookie设置到headwr页面中,显示用户信息
+        let { username, intro, avatar, id } = JSON.parse(Cookies.get("userInfo"))
+        $('#username').text(username)
+        // 显示头像信息
+        $('#avatar').attr('src', avatar)
+
+        // 查看个人信息
+        $('#personal').click(function () {
+            // 查询变量分配
+            let { username, avatar, intro } = JSON.parse(Cookies.get('userInfo'))
+            $('#avatar').attr('src', avatar);
+
+            // 弹出层内容
+            let content = `
+         <div>
+          <div class="layui-form-item">
+            <label class="layui-form-label">用户名</label>
+            <div class="layui-input-block">
+              <input type="text" name="username" disabled value='${username}' lay-verify="title" autocomplete="off"  class="layui-input"style="width:300px ;margin:30px 0">
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <label class="layui-form-label">头像</label>
+            <div class="layui-input-block">
+              <div class="layui-upload">
+                <button type="button" class="layui-btn" id="test1">上传图片</button>
+                <div class="layui-upload-list">
+                  <img class="layui-upload-img" id="demo1" style='width:80px'>
+                  <p id="demoText"></p>
+                </div>
+                <div style="width: 95px;">
+                  <div class="layui-progress layui-progress-big" lay-showpercent="yes" lay-filter="demo">
+                    <div class="layui-progress-bar" lay-percent=""></div>
+                  </div>
+                </div>
+              </div> 
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <label class="layui-form-label">个人介绍</label>
+            <div class="layui-input-inline">
+              <textarea name="intro"   class="layui-textarea" id="" cols="30" rows="6">${intro}</textarea>
+            </div>
+          </div>
+          <div style="text-align:center;">
+            <button type="button" id="saveUser" class="layui-btn" style="margin-right:-350px">保存</button>
+          </div>
+        </div>
+        `
+            //页面层
+            layer.open({
+                title: '修改个人信息',
+                type: 1,
+                skin: 'layui-layer-rim', //加上边框
+                area: ['520px', '540px'], //宽高
+                skin: 'layui-layer-molv',
+                content: content,
+                success: function (layero, index) {
+                    // 初始化上传
+                    initUpload();
+                    // 回显头像
+                    let { username, intro, avatar } = JSON.parse(Cookies.get("userInfo"))
+                    $('#demo1').attr("src", avatar)
+                }
+            });
+        })
+
+        // 上传头像
+        function initUpload() {
+            // 常规使用 - 普通图片上传
+            const upload = layui.upload;
+            const element = layui.element;
+            var uploadInst = upload.render({
+                elem: '#test1',
+                url: '/avatar', //改成您自己的上传接口即可
+                before: function (obj) {
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                        $('#demo1').attr('src', result); //图片链接（base64)
+                    });
+
+                    element.progress('demo', '0%'); //进度条复位
+                    layer.msg('上传中', {
+                        icon: 16,
+                        time: 0
+                    });
+                },
+                done: function (res) {
+                    //如果上传成功
+                    if (res.code === 0) {
+                        // 将用户的头像信息回显,刚刚已经在后台设置了cookie,现在可与直接拿来用
+                        let { avatar } = JSON.parse(Cookies.get("userInfo"))
+                        $('#avatar').attr('src', avatar);
+                        // return layer.msg('上传失败');
+                    }
+                    //上传成功的一些操作
+                    //……
+                    $('#demoText').html(''); //置空上传失败的状态
+                },
+                error: function () {
+                    //演示失败状态，并实现重传
+                    var demoText = $('#demoText');
+                    demoText.html(
+                        '<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function () {
+                        uploadInst.upload();
+                    });
+                }
+                //进度条
+                ,
+                progress: function (n, elem, e) {
+                    element.progress('demo', n + '%'); //可配合 layui 进度条元素使用
+                    if (n == 100) {
+                        layer.msg('上传完毕', {
+                            icon: 1
+                        });
+                    }
+                }
+            });
         }
+        // 修改密码页面
+        $('#chanPassword').on("click", function () {
+            function ChanPassword() {
+                let newcont = `
+                                <div style=padding:20px>
+                                    <form class="layui-form" action="" lay-filter="example">
+                                    <div class="layui-form-item">
+                                        <label class="layui-form-label">原密码</label>
+                                        <div class="layui-input-block">
+                                        <input type="password" id="oldpassword" name="oldpassword" placeholder="请输入旧密码" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-form-item">
+                                        <label class="layui-form-label">新密码</label>
+                                        <div class="layui-input-block">
+                                        <input type="password" id="newpassword1" name="newpassword1" placeholder="请输入新密码" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                        <div class="layui-form-item">
+                                        <label class="layui-form-label">确认新密码</label>
+                                        <div class="layui-input-block">
+                                        <input type="password" id="newpassword2" name="newpassword2" placeholder="请再次输入新密码" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-form-item">
+                                        <div class="layui-input-block">
+                                        <button type="button" class="layui-btn" lay-submit="" lay-filter="demo1" id="addpas">确认修改</button>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div/>`
+                layer.open({
+                    title: '修改密码',
+                    shadeClose: 1,
+                    type: 1,
+                    skin: 'layui-layer-molv', //样式类名
+                    anim: 2,
+                    shadeClose: true, //开启遮罩关闭
+                    area: ['500px', '300px'],
+                    closeBtn: 0,
+                    content: newcont
+                });
+            }
+            ChanPassword()
+        })
+        // 跟旧密码比对给提示
+        $(document).on("blur", "#oldpassword", async function () {
+            value = $(this).val()
+            let { code, message } = await $.post("/valipass", { pass: value, user: username })
+            if (code === 0) {
+                $(this).addClass("layui-border-green")
+            } else {
+                $(this).removeClass("layui-border-green")
+            }
+
+        })
+        // 判断密码给提示
+        $(document).on("blur", "#newpassword1", function () {
+            newpassword1 = $(this).val()
+            let passReg = /\d{5}/
+            var result = newpassword1.match(passReg);
+            if (result){
+                $(this).addClass("layui-border-green")
+            }else{
+                $(this).removeClass("layui-border-green")
+            }
+                
+        })
+        //二次确认密码给提示
+        $(document).on("blur", "#newpassword2", function () {
+            newpassword2 = $('#newpassword2').val()
+            newpassword2 = $(this).val()
+            if (newpassword1 === newpassword2){
+                $(this).addClass("layui-border-green")
+            }else{
+                $(this).removeClass("layui-border-green")
+            }
+                
+        })
+        // 点击提交传入数据库给提示
+        $(document).on("click", "#addpas", async function () {
+            value = $("#oldpassword").val()
+            newpassword1 = $("#newpassword1").val()
+            newpassword2 = $("#newpassword2").val()
+            var passReg = /\d{5}/
+            var result = newpassword1.match(passReg)
+            let { code, message } = await $.post("/valipass", { pass: value, user: username })
+            if (value === '' || newpassword1 === '' || newpassword2 === '') {
+                layer.msg("密码不能空", { icon: 2 })
+                return
+            } else if (code === -1) {
+                layer.msg("原密码错误", { icon: 2 })
+                return
+            } else if (!result) {
+                layer.msg("新密码必须是5位数字", { icon: 2 })
+                return
+            } else if (newpassword2 !== newpassword1) {
+                layer.msg("两次密码不一致", { icon: 2 })
+                return
+            } else {
+                let { code, message } = await $.post("/editpass", { newpassword2, id })
+                if (code === 0) {
+                    layer.msg("修改成功,请重新登陆", { icon: 1 })
+                    setTimeout(() => {
+                        location.reload()
+                    }, 1200)
+
+                } else {
+                    layer.msg("修改失败", { icon: 2 })
+                }
+            }
+        })
+
     })
-
-
-    let { username, intro, avatar } = JSON.parse(Cookies.get("userInfo"))
-    console.log(username);
-    // 获取cookie设置到headwr页面中,显示用户信息
-    $('#username').text(username)
 
 </script>

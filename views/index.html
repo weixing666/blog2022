@@ -19,7 +19,9 @@
 
     <div class="layui-body">
       <!-- 内容主体区域 -->
-      <div style="padding: 15px;">首页区域</div>
+      <div style="padding: 15px;">
+        <div id="main" style="width: 1000px;height:400px;"></div>
+      </div>
     </div>
 
     <div class="layui-footer">
@@ -28,7 +30,7 @@
     </div>
   </div>
   <script src="/assets/layui/layui.js"></script>
-  <!-- <script src="https://cdn.bootcdn.net/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"></script> -->
+  <script src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script>
   <script>
     layui.use(['element', 'layer', 'util', 'upload'], async function () {
       var element = layui.element
@@ -36,6 +38,45 @@
       upload = layui.upload
       util = layui.util
       $ = layui.$;
+      // 数据可视化
+      $.get("/cateCount").then(res => {
+        let classify = [] //分类
+        let quantity = []//分类数量
+        res.forEach(iten => {
+          classify.push(iten.cate_name)
+          quantity.push(iten.total)
+        });
+        loadgraphy(classify, quantity)//等数据出来后再调用,因为异步执行
+      })
+
+      function loadgraphy(classify, quantity) {
+        var myChart = echarts.init(document.getElementById('main'));
+        // 指定图表的配置项和数据
+        var option = {
+          title: {
+            text: '分类文章统计'
+          },
+          tooltip: {},
+          legend: {
+            data: ['篇数']
+          },
+          xAxis: {
+            // 分类
+            data: classify,
+          },
+          yAxis: {},
+          series: [{
+            name: '篇数',
+            type: 'bar',
+            // 分类数量
+            data: quantity,
+          }]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+      }
+      
       // 设置用户名称
       let logoText = ''
       result = await $.get("/systemData")
@@ -67,113 +108,120 @@
         });
       })
 
-      // 查看个人信息
-      $('#personal').click(function () {
-        // 查询变量分配
-        console.log(Cookies.get('userInfo'));
-        let { username, avatar, intro } = JSON.parse(Cookies.get('userInfo'))
+      // (已抽离到公共页面) 查看个人信息模块
+      // $('#personal').click(function () {
+      //   // 查询变量分配
+      //   let { username, avatar, intro } = JSON.parse(Cookies.get('userInfo'))
+      //   $('#avatar').attr('src', avatar);
 
-        // 弹出层内容
-        let content = `
-         <div>
-          <div class="layui-form-item">
-            <label class="layui-form-label">用户名</label>
-            <div class="layui-input-block">
-              <input type="text" name="username" disabled value='${username}' lay-verify="title" autocomplete="off"  class="layui-input">
-            </div>
-          </div>
-          <div class="layui-form-item">
-            <label class="layui-form-label">你的照骗</label>
-            <div class="layui-input-block">
-              <div class="layui-upload">
-                <button type="button" class="layui-btn" id="test1">上传图片</button>
-                <div class="layui-upload-list">
-                  <img class="layui-upload-img" id="demo1">
-                  <p id="demoText"></p>
-                </div>
-                <div style="width: 95px;">
-                  <div class="layui-progress layui-progress-big" lay-showpercent="yes" lay-filter="demo">
-                    <div class="layui-progress-bar" lay-percent=""></div>
-                  </div>
-                </div>
-              </div> 
-            </div>
-          </div>
-          <div class="layui-form-item">
-            <label class="layui-form-label">个人介绍</label>
-            <div class="layui-input-inline">
-              <textarea name="intro"   class="layui-textarea" id="" cols="30" rows="6">${intro}</textarea>
-            </div>
-          </div>
-          <div style="text-align:center;">
-            <button type="button" id="saveUser" class="layui-btn layui-btn-primary layui-border-blue layui-btn-fluid">保存</button>
-          </div>
-        </div>
-        `
-        //页面层
-        layer.open({
-          title: '修改个人信息',
-          type: 1,
-          skin: 'layui-layer-rim', //加上边框
-          area: ['420px', '540px'], //宽高
-          content: content,
-          success: function (layero, index) {
-            // 初始化上传
-            initUpload();
-          }
-        });
-      })
+      //   // 弹出层内容
+      //   let content = `
+      //    <div>
+      //     <div class="layui-form-item">
+      //       <label class="layui-form-label">用户名</label>
+      //       <div class="layui-input-block">
+      //         <input type="text" name="username" disabled value='${username}' lay-verify="title" autocomplete="off"  class="layui-input"style="width:300px ;margin:30px 0">
+      //       </div>
+      //     </div>
+      //     <div class="layui-form-item">
+      //       <label class="layui-form-label">头像</label>
+      //       <div class="layui-input-block">
+      //         <div class="layui-upload">
+      //           <button type="button" class="layui-btn" id="test1">上传图片</button>
+      //           <div class="layui-upload-list">
+      //             <img class="layui-upload-img" id="demo1" style='width:80px'>
+      //             <p id="demoText"></p>
+      //           </div>
+      //           <div style="width: 95px;">
+      //             <div class="layui-progress layui-progress-big" lay-showpercent="yes" lay-filter="demo">
+      //               <div class="layui-progress-bar" lay-percent=""></div>
+      //             </div>
+      //           </div>
+      //         </div> 
+      //       </div>
+      //     </div>
+      //     <div class="layui-form-item">
+      //       <label class="layui-form-label">个人介绍</label>
+      //       <div class="layui-input-inline">
+      //         <textarea name="intro"   class="layui-textarea" id="" cols="30" rows="6">${intro}</textarea>
+      //       </div>
+      //     </div>
+      //     <div style="text-align:center;">
+      //       <button type="button" id="saveUser" class="layui-btn" style="margin-right:-350px">保存</button>
+      //     </div>
+      //   </div>
+      //   `
+      //   //页面层
+      //   layer.open({
+      //     title: '修改个人信息',
+      //     type: 1,
+      //     skin: 'layui-layer-rim', //加上边框
+      //     area: ['520px', '540px'], //宽高
+      //     skin: 'layui-layer-molv',
+      //     content: content,
+      //     success: function (layero, index) {
+      //       // 初始化上传
+      //       initUpload();
+      //       // 回显头像
+      //       let { username, intro, avatar } = JSON.parse(Cookies.get("userInfo"))
+      //       $('#demo1').attr("src", avatar)
+      //     }
+      //   });
+      // })
 
-      // 上传头像
-      function initUpload() {
-        // 常规使用 - 普通图片上传
-        const upload = layui.upload;
-        const element = layui.element;
-        var uploadInst = upload.render({
-          elem: '#test1',
-          // url: '/avatar', //改成您自己的上传接口即可
-          before: function (obj) {
-            //预读本地文件示例，不支持ie8
-            obj.preview(function (index, file, result) {
-              $('#demo1').attr('src', result); //图片链接（base64）
-            });
+      // // 上传头像
+      // function initUpload() {
+      //   // 常规使用 - 普通图片上传
+      //   const upload = layui.upload;
+      //   const element = layui.element;
+      //   var uploadInst = upload.render({
+      //     elem: '#test1',
+      //     url: '/avatar', //改成您自己的上传接口即可
+      //     before: function (obj) {
+      //       //预读本地文件示例，不支持ie8
+      //       obj.preview(function (index, file, result) {
+      //         $('#demo1').attr('src', result); //图片链接（base64)
+      //       });
 
-            element.progress('demo', '0%'); //进度条复位
-            layer.msg('上传中', {
-              icon: 16,
-              time: 0
-            });
-          },
-          done: function (res) {
-            //如果上传失败
-            if (res.code > 0) {
-              return layer.msg('上传失败');
-            }
-            //上传成功的一些操作
-            //……
-            $('#demoText').html(''); //置空上传失败的状态
-          },
-          error: function () {
-            //演示失败状态，并实现重传
-            var demoText = $('#demoText');
-            demoText.html(
-              '<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
-            demoText.find('.demo-reload').on('click', function () {
-              uploadInst.upload();
-            });
-          }
-          //进度条
-          ,
-          progress: function (n, elem, e) {
-            element.progress('demo', n + '%'); //可配合 layui 进度条元素使用
-            if (n == 100) {
-              layer.msg('上传完毕', {
-                icon: 1
-              });
-            }
-          }
-        });
-      }
+      //       element.progress('demo', '0%'); //进度条复位
+      //       layer.msg('上传中', {
+      //         icon: 16,
+      //         time: 0
+      //       });
+      //     },
+      //     done: function (res) {
+      //       //如果上传成功
+      //       if (res.code === 0) {
+      //         // 将用户的头像信息回显,刚刚已经在后台设置了cookie,现在可与直接拿来用
+      //         let { avatar } = JSON.parse(Cookies.get("userInfo"))
+      //         $('#avatar').attr('src', avatar);
+      //         // return layer.msg('上传失败');
+      //       }
+      //       //上传成功的一些操作
+      //       //……
+      //       $('#demoText').html(''); //置空上传失败的状态
+      //     },
+      //     error: function () {
+      //       //演示失败状态，并实现重传
+      //       var demoText = $('#demoText');
+      //       demoText.html(
+      //         '<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+      //       demoText.find('.demo-reload').on('click', function () {
+      //         uploadInst.upload();
+      //       });
+      //     }
+      //     //进度条
+      //     ,
+      //     progress: function (n, elem, e) {
+      //       element.progress('demo', n + '%'); //可配合 layui 进度条元素使用
+      //       if (n == 100) {
+      //         layer.msg('上传完毕', {
+      //           icon: 1
+      //         });
+      //       }
+      //     }
+      //   });
+      // }
 
       // 保存用户信息
       $(document).on("click", "#saveUser", async function () {
@@ -188,12 +236,8 @@
         }
       })
 
-
-
-
-
-
-
+      
+    
     });
   </script>
 </body>

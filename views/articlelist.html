@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>德德后台管理系统</title>
   <link rel="stylesheet" href="/assets/layui/css/layui.css">
+  <link rel="stylesheet" href="/assets/css/lightbox.min.css">
 </head>
 
 <body>
@@ -19,9 +20,20 @@
     <div class="layui-body">
       <!-- 内容主体区域 -->
       <div style="padding: 15px;">
-        <table class="layui-table" id="arti" lay-filter="arti">
 
-        </table>
+        <!-- 搜索区域start -->
+        <div class="search" style="display:flex">
+          <a class="layui-btn" href="/addArticle">添加</a>
+          <div class="layui-form-item">
+            <div class="layui-input-block" style="margin-left:30px;">
+              <input type="text" id="keyword" autocomplete="off" placeholder="请输入标题" class="layui-input">
+            </div>
+          </div>
+          <button class="layui-btn layui-btn-warn" id="search">立即搜索</button>
+        </div>
+        <!-- 搜索区域end -->
+
+        <table class="layui-hide" id="test" lay-filter="test"></table>
       </div>
     </div>
 
@@ -30,93 +42,125 @@
       底部固定区域
     </div>
   </div>
+
+  <!-- 操作的模板 -->
+  <script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+  </script>
+
   <script src="/assets/layui/layui.js"></script>
+  <script src="/assets/js/lightbox-plus-jquery.min.js"></script>
   <script>
-    // layui.use(['element', 'layer', 'util'], function () {
-    //   var element = layui.element
-    //     , layer = layui.layer
-    //     , util = layui.util
-    //     , $ = layui.$;
+    // 弹窗显示内容
+    function showContent(data) {
+      let { title, content, username, add_date } = data;
+      content = `<div style="padding:15px">
+        <h2>${title}</h2>
+        <div>${add_date} ${username}</div>
+        ${content}
+      </div>`
+      //页面层
+      layer.open({
+        title,
+        content,
+        type: 1,
+        skin: 'layui-layer-molv', //加上边框
+        area: ['620px', '640px'], //宽高
 
-    //   //头部事件
-    //   util.event('lay-header-event', {
-    //     //左侧菜单事件
-    //     menuLeft: function (othis) {
-    //       layer.msg('展开左侧菜单的操作111', { icon: 0 });
-    //     }
-    //     , menuRight: function () {
-    //       layer.open({
-    //         type: 1
-    //         , content: '<div style="padding: 15px;">处理右侧面板的操作234</div>'
-    //         , area: ['260px', '100%']
-    //         , offset: 'rt' //右上角
-    //         , anim: 5
-    //         , shadeClose: true
-    //       });
-    //     }
-    //   });
-    // });
-    layui.use(['table', 'layer'], function () {
+      });
+    }
+
+    layui.use('table', function () {
       var table = layui.table;
-      var layer = layui.layer;
-      var laydate = layui.laydate;
-      var util = layui.util;
-      var $ = layui.jquery;
-      // 渲染数据
       table.render({
-        elem: '#arti',
-        // 渲染数据接口
-        url: '/artiData',
-        toolbar: '#artiTool',
-        cols: [[
-          { field: 'id', width: 150, title: 'ID', sort: true },
-          { field: 'title', width: 150, edit: 'text', title: '标题', sort: true },
-          { field: 'content', width: 150, edit: 'text', title: '内容', sort: true },
-          { field: 'author', width: 150, edit: 'text', title: '作者', sort: true },
-          { field: 'status', width: 150, edit: 'text', title: '状态', sort: true },
-          { field: 'add_date', width: 150, edit: 'text', title: '添加时间', sort: true },
-          { field: 'pic', width: 150, edit: 'text', title: '图片', sort: true },
-          { field: 'cate_id', width: 150, edit: 'text', title: '分类排序', sort: true },
-          {
-            fixed: "right", width: 150, title: '操作', templet: (obj) => {
-              return `
-          <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-          <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
-          `
+        elem: '#test'
+        , url: '/artiData'
+        , cols: [[
+          { type: 'checkbox', fixed: 'left' }
+          , { field: 'id', width: 80, title: 'ID', fixed: 'left', unresize: true, sort: true }
+          , { field: 'title', title: '文章标题', }
+          , {
+            field: 'pic', title: '图片', templet: ({ pic }) => {
+              return `<a class="example-image-link" href="${pic}" data-lightbox="example-set" data-title="Click the right half of the image to move forward.">
+      	<img class="example-image" src="${pic}" alt=""/>
+      </a>`
             }
-
           }
+          , {
+            field: 'content', title: '内容', templet: (data) => {
+              let mydata = JSON.stringify(data)
+              return `<a href="javascript:;" onclick='showContent(${mydata})'>预览内容</a>`
+            }
+          }
+          , { field: 'username', title: '发布者', }
+          , { field: 'statusText', title: '是否审核', }
+          , { field: 'add_date', title: '添加时间' }
+          , { field: 'cate_name', title: '所属分类', }
+          , { field: 'right', title: '操作', toolbar: '#barDemo' }
         ]]
-      })
- 
-    // 编辑数据
-      table.on('edit(arti)', async function (obj) {
-        const { data } = obj;
-        // 发送请求，传递数据，并且成功接受返回的参数
-        const { code, message } = await $.post('/artiUpdData', data)
-        if (code === '0') {
-          layer.msg(message)
-          table.reload("arti")
+        , page: {
+          limit: 10,
+          prev: '上一页',
+          next: '下一页'
         }
       });
-      // 删除数据
-      table.on('tool(arti)', function (obj) {
-        var data = obj.data;
-        if (obj.event == 'del') {
-          layer.confirm('真的删除行么',async function () {
-            let { code, message } = await $.post('/artiDel', data)
-            console.log(code);
-            if (code === "0") {
-              layer.msg(message)
-              table.reload("arti") 
-              // layer.close(index);
-            }
-          });
-        }
-      })
 
-    })
+      //头工具栏事件
+      table.on('toolbar(test)', function (obj) {
+        var checkStatus = table.checkStatus(obj.config.id);
+        switch (obj.event) {
+          case 'getCheckData':
+            var data = checkStatus.data;
+            layer.alert(JSON.stringify(data));
+            break;
+          case 'getCheckLength':
+            var data = checkStatus.data;
+            layer.msg('选中了：' + data.length + ' 个');
+            break;
+          case 'isAll':
+            layer.msg(checkStatus.isAll ? '全选' : '未全选');
+            break;
+
+          //自定义头工具栏右侧图标 - 提示
+          case 'LAYTABLE_TIPS':
+            layer.alert('这是工具栏右侧自定义的一个图标按钮');
+            break;
+        };
+      });
+
+      //监听行工具事件
+      table.on('tool(test)', function (obj) {
+        var data = obj.data;
+        if (obj.event === 'del') {
+          layer.confirm('真的删除行么', async function (index) {
+            const { id } = data;
+            const { code, message } = await $.post('/delArtData', { id })
+            if (code === 0) {
+              // 重载当前表格
+              table.reload('test')
+              location.reload()
+            }
+            layer.msg(message)
+          });
+        } else if (obj.event === 'edit') {
+          location.href = `/editArticle?id=${obj.data.id}`
+        }
+      });
+
+      // 搜索
+      $("#search").on('click', () => {
+        // 1. 获取关键字
+        let keyword = $("#keyword").val()
+        // 2. 发送ajax请求
+        table.reload('test', {
+          where: { keyword } //设定异步数据接口的额外参数
+        });
+      })
+    });
+
   </script>
+
 
 </body>
 

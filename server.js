@@ -6,16 +6,15 @@ const express_template = require('express-art-template');
 const multer = require('multer')
 const checkSessAuth = require("./middleware/checkSessAuth")
 
-// 设置上传的目录
-const upload = multer({
-    dest: 'uploads/'
-})
 
+// 需放在所有需要使用的app变量的前面
 const app = express()
+
 const session = require('express-session');
 
-// 托管静态资源
+// 托管静态资源(需放在拦截路由的前面)
 app.use("/assets", express.static(path.join(__dirname, "assets")))
+app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 // 初始化session相关配置
 app.use(
@@ -30,12 +29,11 @@ app.use(
     })
 )
 
-// 放行路由
+// 放行路由(需在所有路由的前面)
 app.use(checkSessAuth)
 
-// 导入模块
+// 导入路由模块
 const router = require("./router/router");
-const { log } = require("console");
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))

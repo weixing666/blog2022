@@ -1,4 +1,5 @@
 const IndexController = {};
+const { log } = require("util");
 // 导入模型
 const query = require("../model/query")
 
