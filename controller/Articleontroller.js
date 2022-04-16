@@ -66,7 +66,6 @@ Articleontroller.addArtData = async (req, res) => {
         let oldPath = `${destination}${filename}`;
         let newPath = `${destination}${originalname}`;
         await rename(oldPath, newPath)
-        console.log(req.file);
         pic = `uploads/${originalname}`
     }
 

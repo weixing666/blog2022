@@ -4,12 +4,13 @@ const dotenv = require('dotenv').config({ path: '.env' })
 const artTemplate = require('art-template');
 const express_template = require('express-art-template');
 const multer = require('multer')
+const cors = require("cors")
 const checkSessAuth = require("./middleware/checkSessAuth")
 
 
 // 需放在所有需要使用的app变量的前面
 const app = express()
-
+app.use(cors())
 const session = require('express-session');
 
 // 托管静态资源(需放在拦截路由的前面)
@@ -29,6 +30,10 @@ app.use(
     })
 )
 
+// 导入前台路由
+const reception = require("./router/reception")
+app.use("/api", reception)
+
 // 放行路由(需在所有路由的前面)
 app.use(checkSessAuth)
 
@@ -46,6 +51,8 @@ app.engine('html', express_template);
 app.set('view engine', 'html');
 
 app.use(router)
+
+
 
 app.listen(process.env.PORT, () => {
     console.log(`server is running at port ${process.env.PORT}`);

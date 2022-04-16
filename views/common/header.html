@@ -1,5 +1,10 @@
-<div class="layui-header">
-    <div class="layui-logo layui-hide-xs layui-bg-black" id="logoText">小猪博客管理系统</div>
+<div class="layui-header">  
+    <div class="layui-logo layui-hide-xs layui-bg-black" style="display: flex;justify-content:center;">
+        <div style="margin-right: 30px;">
+            <img src="" alt="" id="logouser" style="width:35px;height: 35px;border-radius: 50%;">
+        </div>
+        <div id="logoText">小猪博客管理系统</div>
+    </div>
     <!-- 头部区域（可配合layui 已有的水平导航） -->
     <ul class="layui-nav layui-layout-left">
         <!-- 移动端显示 -->
@@ -45,10 +50,6 @@
         laydate = layui.laydate
         $ = layui.$;
 
-        // 设置博客昵称
-        let logoText = localStorage.getItem('logoText')
-        $("#logoText").text(logoText)
-
         // 点击退出登陆
         $('#logon').on("click", async () => {
             let { code } = await $.get("/logoff")
@@ -58,17 +59,18 @@
                 alert('退出失败')
             }
         })
-
         // 获取cookie设置到headwr页面中,显示用户信息
         let { username, intro, avatar, id } = JSON.parse(Cookies.get("userInfo"))
+        console.log(avatar);
         $('#username').text(username)
         // 显示头像信息
-        $('#avatar').attr('src', avatar)
+        $('#avatar').attr('src',`/${avatar}`)
 
         // 查看个人信息
         $('#personal').click(function () {
             // 查询变量分配
             let { username, avatar, intro } = JSON.parse(Cookies.get('userInfo'))
+            console.log(avatar);
             $('#avatar').attr('src', avatar);
 
             // 弹出层内容
@@ -240,23 +242,23 @@
             newpassword1 = $(this).val()
             let passReg = /\d{5}/
             var result = newpassword1.match(passReg);
-            if (result){
+            if (result) {
                 $(this).addClass("layui-border-green")
-            }else{
+            } else {
                 $(this).removeClass("layui-border-green")
             }
-                
+
         })
         //二次确认密码给提示
         $(document).on("blur", "#newpassword2", function () {
             newpassword2 = $('#newpassword2').val()
             newpassword2 = $(this).val()
-            if (newpassword1 === newpassword2){
+            if (newpassword1 === newpassword2) {
                 $(this).addClass("layui-border-green")
-            }else{
+            } else {
                 $(this).removeClass("layui-border-green")
             }
-                
+
         })
         // 点击提交传入数据库给提示
         $(document).on("click", "#addpas", async function () {
@@ -289,6 +291,20 @@
                 } else {
                     layer.msg("修改失败", { icon: 2 })
                 }
+            }
+        })
+
+
+
+        $(document).on("click", "#saveUser", async function () {
+            // 将信息存到cookie 中去
+            const { id } = JSON.parse(Cookies.get('userInfo'))
+            const intro = $("textarea[name='intro']").val()
+            const { code, message } = await $.post('/UpduserInfo', { id, intro })
+            if (code === '0') {
+                layer.msg(message, { icon: 1 })
+            } else {
+                layer.msg('upuser fail', { icon: 2 })
             }
         })
 

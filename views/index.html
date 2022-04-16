@@ -76,37 +76,6 @@
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
       }
-      
-      // 设置用户名称
-      let logoText = ''
-      result = await $.get("/systemData")
-      result.find(item => {
-        if (item.name === "logoText") {
-          logoText = item.val
-          return true
-        }
-      })
-      $("#logoText").text(logoText)
-      // 储存到localStorage中，供其他页面使用
-      localStorage.setItem("logoText", logoText)
-
-      // 编辑博客名称
-      $('#edit').click(function () {
-        layer.prompt({
-          formType: 2,
-          title: '编辑昵称',
-          value: logoText,
-          area: ['500px', '25px'] //自定义文本域宽高
-        }, async function (value, index, elem) {
-          let data = { logoText: value }
-          layer.close(index);
-          let { code, message } = await $.post("/editsettings", data)
-          if (code === "0") {
-            layer.msg('编辑成功')
-            location.reload()
-          }
-        });
-      })
 
       // (已抽离到公共页面) 查看个人信息模块
       // $('#personal').click(function () {
@@ -224,20 +193,18 @@
       // }
 
       // 保存用户信息
-      $(document).on("click", "#saveUser", async function () {
-        // 将信息存到cookie 中去
-        const { id } = JSON.parse(Cookies.get('userInfo'))
-        const intro = $("textarea[name='intro']").val()
-        const { code, message } = await $.post('/UpduserInfo', { id, intro })
-        if (code === '0') {
-          layer.msg(message, { icon: 1 })
-        } else {
-          layer.msg('upuser fail', { icon: 2 })
-        }
-      })
+      // $(document).on("click", "#saveUser", async function () {
+      //   // 将信息存到cookie 中去
+      //   const { id } = JSON.parse(Cookies.get('userInfo'))
+      //   const intro = $("textarea[name='intro']").val()
+      //   const { code, message } = await $.post('/UpduserInfo', { id, intro })
+      //   if (code === '0') {
+      //     layer.msg(message, { icon: 1 })
+      //   } else {
+      //     layer.msg('upuser fail', { icon: 2 })
+      //   }
+      // })
 
-      
-    
     });
   </script>
 </body>

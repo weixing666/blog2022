@@ -9,6 +9,7 @@ const { rename, unlink } = require("../middleware/Asyrenaming") //异步文件
 const query = require("../model/query");
 // 导入加密配置
 let { password_secret } = require('../config/config');
+const { log } = require("console");
 
 loginController.login = (req, res) => {
     res.render("login.html")
@@ -23,9 +24,10 @@ loginController.userpass = async (req, res) => {
     let result = await query(sql)
     if (result.length > 0) {
         //2、将用户信息记录到session,初始化的时候已经设置有效期
+        let result2 = await query(sql)
         req.session.userInfo = result[0]
         //3、记录用户,记得设置有效期
-        res.cookie('userInfo', JSON.stringify(result[0]), {
+        res.cookie('userInfo', JSON.stringify(result2[0]), {
             expires: new Date(Date.now() + 1 * 3600000),
         })
         res.json({
@@ -139,9 +141,9 @@ loginController.avatar = async (req, res) => {
         let newPath = `${destination}${originalname}`;
         await rename(oldPath, newPath)
         // 获取pic
-        let oldAvatar = req.session.userInfo.avatar;
-        oldAvatar = path.join(path.dirname(__dirname), oldAvatar)
-        await unlink(oldAvatar)
+        let oldheadpic = req.session.userInfo.avatar;
+        oldheadpic = path.join(path.dirname(__dirname), oldheadpic)
+        await unlink(oldheadpic)
         // 将新的图片信息插入数据库
         const sql = `update username set avatar = '${newPath}'where id = ${id}`
         await query(sql)

@@ -10,8 +10,146 @@
                     <dd><a href="/articlelist">文章列表</a></dd>
                 </dl>
             </li>
-        <li class="layui-nav-item"><a href="javascript:;" id="edit">系统设置</a></li>
-        <li class="layui-nav-item"><a href="">the links</a></li>
+            <li class="layui-nav-item">
+                <a href="javascript:;" id="edit">系统设置</a>
+            </li>
+            <li class="layui-nav-item"><a href="">the links</a></li>
         </ul>
     </div>
 </div>
+<script>
+    // 1.请求数据
+    let result
+    async function getsettin() {
+        result = await $.get("/getsettin")
+        $('#logoText').text(result[0].val)
+        $('#logouser').attr("src", result[1].val)
+    }
+    getsettin()
+    // 系统设置提交数据-设置
+    $(document).on("click", "#setlogo", async function () {
+        let logoText = $("input[name='username']").val()
+        let { code, message } = await $.post('/editsettings', { logoText })
+        if (code === '0') {
+            layer.msg(message, { icon: 1 })
+            // 设置到localStorage 供其他页面使用
+            localStorage.setItem('logoText', logoText)
+            $("#logoText").text(logoText)
+        } else {
+            layer.msg('upuser fail', { icon: 2 })
+        }
+    })
+
+    // 系统设置-点击查看设置
+    $('#edit').click(function () {
+        let logtext = localStorage.getItem("logoText")
+        let logo = localStorage.getItem("logo")
+        // 查询变量分配
+        // let { username, avatar, intro } = JSON.parse(Cookies.get('userInfo'))
+        $('#demo2').attr('src','/uploads/扁平插画 (6).jpg');
+
+        // console.log(newPathp);
+        // 弹出层内容
+        let content = `
+         <div>
+          <div class="layui-form-item">
+            <label class="layui-form-label">博客昵称</label>
+            <div class="layui-input-block">
+              <input type="text" name="username" id='val' value ='${logtext}' lay-verify="title" autocomplete="off"  class="layui-input"style="width:300px ;margin:30px 0">
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <label class="layui-form-label">Logo</label>
+            <div class="layui-input-block">
+              <div class="layui-upload">
+                <button type="button" class="layui-btn" id="test2">上传图片</button>
+                <div class="layui-upload-list">
+                  <img class="layui-upload-img" id="demo2" style='width:80px'>
+                  <p id="demoText"></p>
+                </div>
+                <div style="width: 95px;">
+                  <div class="layui-progress layui-progress-big" lay-showpercent="yes" lay-filter="demo">
+                    <div class="layui-progress-bar" lay-percent=""></div>
+                  </div>
+                </div>
+              </div> 
+            </div>
+          </div>
+          <div style="text-align:center;">
+            <button type="button" id="setlogo" class="layui-btn" style="margin-right:-350px">保存</button>
+          </div>
+        </div>
+        `
+        //页面层
+        layer.open({
+            title: '系统设置',
+            type: 1,
+            skin: 'layui-layer-rim', //加上边框
+            area: ['520px', '540px'], //宽高
+            skin: 'layui-layer-molv',
+            content: content,
+            success: function (layero, index) {
+                // 初始化上传
+                initUpload();
+                // 回显头像
+                $('#demo2').attr("src",logo)
+
+            }
+        });
+    })
+
+
+    // 系统设置-上传头像
+    function initUpload() {
+        // 常规使用 - 普通图片上传
+        const upload = layui.upload;
+        const element = layui.element;
+        let oldpaths = localStorage.getItem("logo")
+        var uploadInst = upload.render({
+            elem: '#test2',
+            url: `/textlogo?id=${result[1].val}`, //改成您自己的上传接口即可
+            before: function (obj) {
+                //预读本地文件示例，不支持ie8
+                obj.preview(function (index, file, result) {
+                    $('#demo2').attr('src', result); //图片链接（base64)
+                });
+
+                element.progress('demo', '0%'); //进度条复位
+                layer.msg('上传中', {
+                    icon: 16,
+                    time: 0
+                });
+            },
+            done: function (res) {
+                //如果上传成功
+                let { code, newPath } = res
+                if (res.code === 0) {
+                    localStorage.setItem("logo", newPath)
+                    $('#logouser').attr('src', newPath);
+                    // newPathp = newPath
+                }
+                //上传成功的一些操作
+                //……
+                $('#demoText').html(''); //置空上传失败的状态
+            },
+            error: function () {
+                //演示失败状态，并实现重传
+                var demoText = $('#demoText');
+                demoText.html(
+                    '<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                demoText.find('.demo-reload').on('click', function () {
+                    uploadInst.upload();
+                });
+            },
+            progress: function (n, elem, e) {
+                element.progress('demo', n + '%'); //可配合 layui 进度条元素使用
+                if (n == 100) {
+                    layer.msg('上传完毕', {
+                        icon: 1
+                    });
+                }
+            }
+        });
+    }
+
+</script>

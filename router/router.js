@@ -16,11 +16,12 @@ router.get("/index", IndexController.index)
 
 // 系统设置-获取
 router.get("/systemData", IndexController.systemData)
-
+// 系统设置-渲染数据
+router.get("/getsettin", IndexController.getsettin)
 // 系统设置-编辑
 router.post("/editsettings", IndexController.editsettings)
-
-
+// 系统设置,上传logo
+router.post("/textlogo", upload.single('file'), IndexController.textlogo)
 // 分类列表
 router.get("/catelist", CateController.catelist)
 // 分类列表渲染数据
